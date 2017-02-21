@@ -10,7 +10,9 @@ from six.moves import cPickle
 from utils import TextLoader
 from model import Model
 
+
 def main():
+    #parses arguments passed in from command line
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default='data/tinyshakespeare',
                        help='data directory containing input.txt')
@@ -49,11 +51,13 @@ def main():
                             'model.ckpt-*'      : file(s) with model definition (created by tf)
                         """)
     args = parser.parse_args()
-    train(args)
+    train(args) # calls train function with args passed in from command line
 
+#train function to train the RNN on the given data set
 def train(args):
+    #loads text from training set
     data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length)
-    args.vocab_size = data_loader.vocab_size
+    args.vocab_size = data_loader.vocab_size #size of vocabulary
 
     # check compatibility if training is continued from previously saved model
     if args.init_from is not None:
@@ -83,6 +87,7 @@ def train(args):
     with open(os.path.join(args.save_dir, 'words_vocab.pkl'), 'wb') as f:
         cPickle.dump((data_loader.words, data_loader.vocab), f)
 
+    #load the training model
     model = Model(args)
 
     merged = tf.summary.merge_all()
@@ -96,8 +101,9 @@ def train(args):
         # restore model
         if args.init_from is not None:
             saver.restore(sess, ckpt.model_checkpoint_path)
+        #loop through given number of epochs from command line or default number of epochs
         for e in range(model.epoch_pointer.eval(), args.num_epochs):
-            sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
+            sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e))) #run session given learning rate and decay rate
             data_loader.reset_batch_pointer()
             state = sess.run(model.initial_state)
             speed = 0
@@ -109,6 +115,7 @@ def train(args):
             if args.init_from is not None:
                 data_loader.pointer = model.batch_pointer.eval()
                 args.init_from = None
+            #run through number of batches
             for b in range(data_loader.pointer, data_loader.num_batches):
                 start = time.time()
                 x, y = data_loader.next_batch()
@@ -127,7 +134,7 @@ def train(args):
                         or (e==args.num_epochs-1 and b == data_loader.num_batches-1): # save for the last result
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step = e * data_loader.num_batches + b)
-                    print("model saved to {}".format(checkpoint_path))
+                    print("model saved to {}".format(checkpoint_path)) #print out path where model was saved to
         train_writer.close()
 
 if __name__ == '__main__':

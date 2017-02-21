@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-
+#beam class for samples and their scores
 class BeamSearch():
     def __init__(self, probs):
         self.probs = probs
@@ -20,6 +20,7 @@ class BeamSearch():
         live_samples = [[empty]]
         live_scores = [0]
 
+        #loop through samples
         while live_k and dead_k < k:
 
             # total score for every sample is sum of -log of word prb
