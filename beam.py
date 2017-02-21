@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+#test commit
 #beam class for samples and their scores
 class BeamSearch():
     def __init__(self, probs):
